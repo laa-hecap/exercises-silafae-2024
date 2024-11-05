@@ -42,8 +42,12 @@ jobs:
 
       - name: Install ROOT
         run: |
-          sudo apt-get update
-          sudo apt-get install -y root-system
+          ROOT_VERSION=6.32.06
+          OS_VERSION=ubuntu22
+          ARCH=x86_64
+          wget https://root.cern/download/root_v${ROOT_VERSION}.Linux-${OS_VERSION}-${ARCH}-gcc11.4.tar.gz
+          tar -xzvf root_v${ROOT_VERSION}.Linux-${OS_VERSION}-${ARCH}-gcc11.4.tar.gz
+          source root/bin/thisroot.sh
 
       - name: Run ROOT Data Processing Script
         env:
@@ -59,3 +63,4 @@ jobs:
           git add plots/histogram_*.png
           git diff --cached --exit-code || git commit -m "Add updated histogram plot" --allow-empty
           git push --force-with-lease origin HEAD:main
+
