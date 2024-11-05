@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       data_file:
-        description: 'Path to the CSV input file'
+        description: 'Path to the Data URLs input file'
         default: 'data.csv'
         required: true
 
