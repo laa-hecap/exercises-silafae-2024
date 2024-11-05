@@ -17,7 +17,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-        - name: Read CSV File and Prepare Jobs
+      - name: Read CSV File and Prepare Jobs
         id: read_file
         run: |
           files=$(jq -R -s -c 'split("\n")[:-1]' < ${{ github.event.inputs.data_file }})
