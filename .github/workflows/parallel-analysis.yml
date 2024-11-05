@@ -46,42 +46,11 @@ jobs:
           python -c "import condacolab; condacolab.install()"
           mamba install -y root
 
-      - name: Run ROOT Data Processing
+      - name: Run ROOT Data Processing Script
         env:
           ROOT_FILE: ${{ matrix.file }}
         run: |
-          python - << 'EOF'
-import os
-import ROOT
-from ROOT import TMath
-import time
-
-# Define ROOT processing
-root_file_url = os.getenv('ROOT_FILE')
-f = ROOT.TFile.Open(root_file_url)
-canvas = ROOT.TCanvas("Canvas", "cz", 800, 600)
-tree = f.Get("mini")
-
-# Define histogram for invariant mass
-hist = ROOT.TH1F("h_M_Hyy", "Diphoton invariant-mass; Invariant Mass m_{yy} [GeV]; events", 30, 105, 160)
-
-# Process data and fill histogram
-Photon_1 = ROOT.TLorentzVector()
-Photon_2 = ROOT.TLorentzVector()
-n = 0
-for event in tree:
-    n += 1
-    if n % 10000 == 0:
-        print(n)
-    if tree.trigP:
-        # Processing data similar to before, based on tree and photon events
-        pass
-
-# Save histogram plot in 'plots' directory
-os.makedirs('plots', exist_ok=True)
-output_filename = f"plots/histogram_{os.path.basename(root_file_url).replace('.root', '.png')}"
-canvas.SaveAs(output_filename)
-EOF
+          python example.py "$ROOT_FILE"
 
       - name: Commit and Push Histogram Plot
         if: always()
