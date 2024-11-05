@@ -40,16 +40,62 @@ jobs:
         with:
           python-version: '3.10'
 
-      - name: Install ROOT from APT
+      - name: Install ROOT Dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y root-system
+          sudo apt-get install -y \
+            cmake \
+            git \
+            build-essential \
+            libssl-dev \
+            libxpm-dev \
+            libxft-dev \
+            libxext-dev \
+            gfortran \
+            libpcre3-dev \
+            libglu1-mesa-dev \
+            libglew-dev \
+            libftgl-dev \
+            libmysqlclient-dev \
+            libfftw3-dev \
+            libcfitsio-dev \
+            graphviz-dev \
+            libavahi-compat-libdnssd-dev \
+            libldap2-dev \
+            python3-dev \
+            libxml2-dev \
+            libkrb5-dev \
+            libgsl-dev \
+            libqt5opengl5-dev \
+            qtwebengine5-dev \
+            libbz2-dev \
+            liblzma-dev \
+            libdavix-dev \
+            libtbb-dev
+
+      - name: Clone and Build ROOT from Source
+        run: |
+          # Clone the ROOT repository
+          git clone --branch v6-32-06 --depth 1 https://github.com/root-project/root.git
+          mkdir root/build
+          cd root/build
+          
+          # Configure the build
+          cmake .. -DCMAKE_INSTALL_PREFIX=../install
+          
+          # Build and install ROOT
+          make -j$(nproc)
+          make install
+
+      - name: Set ROOT Environment
+        run: |
+          source root/install/bin/thisroot.sh
 
       - name: Run ROOT Data Processing Script
         env:
           ROOT_FILE: ${{ matrix.file }}
         run: |
-          source /usr/share/root/root/bin/thisroot.sh
+          source root/install/bin/thisroot.sh
           python example.py "$ROOT_FILE"
 
       - name: Commit and Push Histogram Plot
