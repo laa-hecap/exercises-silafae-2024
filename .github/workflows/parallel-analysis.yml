@@ -9,22 +9,7 @@ on:
         required: true
 
 jobs:
-  setup:
-    runs-on: ubuntu-latest
-    outputs:
-      files: ${{ steps.read_file.outputs.files }}
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Read CSV File and Prepare Jobs
-        id: read_file
-        run: |
-          files=$(jq -R -s -c 'split("\n")[:-1]' < ${{ github.event.inputs.data_file }})
-          echo "files=$files" >> $GITHUB_OUTPUT      
-
   process-file:
-    needs: setup
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -35,78 +20,25 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Set up Python
+      - name: Set up Python (for file management)
         uses: actions/setup-python@v5
         with:
           python-version: '3.10'
 
-      - name: Install ROOT Dependencies (Minimal)
+      - name: Read CSV File and Prepare Jobs
+        id: read_file
         run: |
-          sudo apt-get update
-          sudo apt-get install -y \
-            cmake \
-            git \
-            build-essential \
-            libssl-dev \
-            libxpm-dev \
-            libxft-dev \
-            libxext-dev \
-            gfortran \
-            libpcre3-dev \
-            libglu1-mesa-dev \
-            libglew-dev \
-            libftgl-dev \
-            libmysqlclient-dev \
-            libfftw3-dev \
-            libcfitsio-dev \
-            graphviz-dev \
-            libavahi-compat-libdnssd-dev \
-            libldap2-dev \
-            python3-dev \
-            libxml2-dev \
-            libkrb5-dev \
-            libgsl-dev \
-            libqt5opengl5-dev \
-            qtwebengine5-dev \
-            libbz2-dev \
-            liblzma-dev \
-            libtbb-dev
+          files=$(jq -R -s -c 'split("\n")[:-1]' < data.csv)
+          echo "files=$files" >> $GITHUB_OUTPUT
 
-      - name: Clone ROOT Repository
-        run: |
-          git clone --branch v6-32-06 --depth 1 https://github.com/root-project/root.git
-
-      - name: Create Build Directory
-        run: |
-          mkdir -p root/build
-
-      - name: Configure ROOT Build
-        working-directory: root/build
-        run: |
-          cmake .. -DCMAKE_INSTALL_PREFIX=../install \
-                   -Ddavix=OFF \
-                   -Dsqlite=OFF \
-                   -Dpythia6=OFF \
-                   -Dpythia8=OFF \
-                   -Dpgsql=OFF \
-                   -Dfftw3=OFF
-
-      - name: Build and Install ROOT
-        working-directory: root/build
-        run: |
-          make -j$(nproc)
-          make install
-
-      - name: Set ROOT Environment
-        run: |
-          source root/install/bin/thisroot.sh
-
-      - name: Run ROOT Data Processing Script
-        env:
-          ROOT_FILE: ${{ matrix.file }}
-        run: |
-          source root/install/bin/thisroot.sh
-          python example.py "$ROOT_FILE"
+      - name: Run ROOT Script in Docker
+        uses: addnab/docker-run-action@v3
+        with:
+          image: rootproject/root:latest
+          options: --rm -v ${{ github.workspace }}:/workspace
+          run: |
+            cd /workspace
+            python3 example.py "${{ matrix.file }}"
 
       - name: Commit and Push Histogram Plot
         if: always()
