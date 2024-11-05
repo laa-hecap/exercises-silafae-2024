@@ -40,7 +40,7 @@ jobs:
         with:
           python-version: '3.10'
 
-      - name: Install ROOT Dependencies
+      - name: Install ROOT Dependencies (Minimal)
         run: |
           sudo apt-get update
           sudo apt-get install -y \
@@ -70,7 +70,6 @@ jobs:
             qtwebengine5-dev \
             libbz2-dev \
             liblzma-dev \
-            libdavix-dev \
             libtbb-dev
 
       - name: Clone and Build ROOT from Source
@@ -80,9 +79,15 @@ jobs:
           mkdir root/build
           cd root/build
           
-          # Configure the build
-          cmake .. -DCMAKE_INSTALL_PREFIX=../install
-          
+          # Configure the build with minimal features
+          cmake .. -DCMAKE_INSTALL_PREFIX=../install \
+                   -Ddavix=OFF \
+                   -Dsqlite=OFF \
+                   -Dpythia6=OFF \
+                   -Dpythia8=OFF \
+                   -Dpgsql=OFF \
+                   -Dfftw3=OFF
+
           # Build and install ROOT
           make -j$(nproc)
           make install
