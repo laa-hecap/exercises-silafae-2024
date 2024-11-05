@@ -74,6 +74,9 @@ jobs:
 
       - name: Clone and Build ROOT from Source
         run: |
+          # Remove any existing ROOT directory
+          if [ -d "root" ]; then rm -rf root; fi
+          
           # Clone the ROOT repository
           git clone --branch v6-32-06 --depth 1 https://github.com/root-project/root.git
           mkdir root/build
