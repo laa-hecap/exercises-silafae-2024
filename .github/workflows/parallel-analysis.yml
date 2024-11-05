@@ -40,30 +40,16 @@ jobs:
         with:
           python-version: '3.10'
 
-      - name: Install ROOT and Dependencies
+      - name: Install ROOT from APT
         run: |
           sudo apt-get update
-          sudo apt-get install -y libtbb12
-          ROOT_VERSION=6.32.06
-          OS_VERSION=ubuntu22.04
-          ARCH=x86_64
-          GCC_VERSION=gcc11.4
-          mkdir root-install
-          wget https://root.cern/download/root_v${ROOT_VERSION}.Linux-${OS_VERSION}-${ARCH}-${GCC_VERSION}.tar.gz
-          tar -xzvf root_v${ROOT_VERSION}.Linux-${OS_VERSION}-${ARCH}-${GCC_VERSION}.tar.gz -C root-install --strip-components=1
-
-      - name: Set ROOT Environment
-        run: |
-          echo "Setting up ROOT environment..."
-          source root-install/bin/thisroot.sh
-        shell: bash
+          sudo apt-get install -y root-system
 
       - name: Run ROOT Data Processing Script
         env:
           ROOT_FILE: ${{ matrix.file }}
-          LD_LIBRARY_PATH: ${{ github.workspace }}/root-install/lib:$LD_LIBRARY_PATH
         run: |
-          source root-install/bin/thisroot.sh
+          source /usr/share/root/root/bin/thisroot.sh
           python example.py "$ROOT_FILE"
 
       - name: Commit and Push Histogram Plot
