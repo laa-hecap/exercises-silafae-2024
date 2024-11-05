@@ -72,17 +72,17 @@ jobs:
             liblzma-dev \
             libtbb-dev
 
-      - name: Clone and Build ROOT from Source
+      - name: Clone ROOT Repository
         run: |
-          # Remove any existing ROOT directory
-          if [ -d "root" ]; then rm -rf root; fi
-          
-          # Clone the ROOT repository
           git clone --branch v6-32-06 --depth 1 https://github.com/root-project/root.git
-          mkdir root/build
-          cd root/build
-          
-          # Configure the build with minimal features
+
+      - name: Create Build Directory
+        run: |
+          mkdir -p root/build
+
+      - name: Configure ROOT Build
+        working-directory: root/build
+        run: |
           cmake .. -DCMAKE_INSTALL_PREFIX=../install \
                    -Ddavix=OFF \
                    -Dsqlite=OFF \
@@ -91,7 +91,9 @@ jobs:
                    -Dpgsql=OFF \
                    -Dfftw3=OFF
 
-          # Build and install ROOT
+      - name: Build and Install ROOT
+        working-directory: root/build
+        run: |
           make -j$(nproc)
           make install
 
