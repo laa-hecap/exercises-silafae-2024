@@ -43,16 +43,19 @@ jobs:
       - name: Install ROOT
         run: |
           ROOT_VERSION=6.32.06
-          OS_VERSION=ubuntu22
+          OS_VERSION=ubuntu22.04
           ARCH=x86_64
-          wget https://root.cern/download/root_v6.32.06.source.tar.gz
-          tar -xzvf root_v6.32.06.source.tar.gz
-          source root/bin/thisroot.sh
+          GCC_VERSION=gcc11.4
+          mkdir root-install
+          wget https://root.cern/download/root_v${ROOT_VERSION}.Linux-${OS_VERSION}-${ARCH}-${GCC_VERSION}.tar.gz
+          tar -xzvf root_v${ROOT_VERSION}.Linux-${OS_VERSION}-${ARCH}-${GCC_VERSION}.tar.gz -C root-install --strip-components=1
+          source root-install/bin/thisroot.sh
 
       - name: Run ROOT Data Processing Script
         env:
           ROOT_FILE: ${{ matrix.file }}
         run: |
+          source root-install/bin/thisroot.sh
           python example.py "$ROOT_FILE"
 
       - name: Commit and Push Histogram Plot
@@ -63,4 +66,3 @@ jobs:
           git add plots/histogram_*.png
           git diff --cached --exit-code || git commit -m "Add updated histogram plot" --allow-empty
           git push --force-with-lease origin HEAD:main
-
