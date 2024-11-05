@@ -9,7 +9,22 @@ on:
         required: true
 
 jobs:
+  setup:
+    runs-on: ubuntu-latest
+    outputs:
+      files: ${{ steps.read_file.outputs.files }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Read CSV File and Prepare Jobs
+        id: read_file
+        run: |
+          files=$(jq -R -s -c 'split("\n")[:-1]' < ${{ github.event.inputs.data_file }})
+          echo "files=$files" >> $GITHUB_OUTPUT
+
   process-file:
+    needs: setup
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -19,17 +34,6 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-
-      - name: Set up Python (for file management)
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.10'
-
-      - name: Read CSV File and Prepare Jobs
-        id: read_file
-        run: |
-          files=$(jq -R -s -c 'split("\n")[:-1]' < data.csv)
-          echo "files=$files" >> $GITHUB_OUTPUT
 
       - name: Run ROOT Script in Docker
         uses: addnab/docker-run-action@v3
