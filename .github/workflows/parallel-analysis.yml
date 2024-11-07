@@ -1,4 +1,4 @@
-name: Process ROOT Data with Plot Commit
+name: Process ATLAS ROOT Open Data
 
 on:
   workflow_dispatch:
