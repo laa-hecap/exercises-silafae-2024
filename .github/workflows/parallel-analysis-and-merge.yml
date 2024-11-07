@@ -44,7 +44,7 @@ jobs:
           options: --rm -v ${{ github.workspace }}:/workspace
           run: |
             cd /workspace
-            python3 example.py "${{ matrix.file }}"
+            python3 gamma-gamma-analysis-v1.py "${{ matrix.file }}"
 
       - name: Commit and Push Histogram Plot
         if: always()
