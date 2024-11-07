@@ -101,6 +101,12 @@ jobs:
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
+          
+          # Add and commit the merged ROOT file
           git add plots/merged_histograms.root || echo "No merged ROOT file generated"
           git diff --cached --exit-code || git commit -m "Add merged ROOT file" --allow-empty
-          git push --force-with-lease origin HEAD:main
+          
+          # Fetch the latest changes, rebase, and push
+          git fetch origin main
+          git rebase origin/main
+          git push --force-with-lease origin HEAD:main || (echo "Rebase failed, retrying..." && git pull --rebase origin main && git push --force-with-lease origin HEAD:main)
