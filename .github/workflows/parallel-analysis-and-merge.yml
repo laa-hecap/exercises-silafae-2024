@@ -79,7 +79,12 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Set up ROOT environment with Docker
+      - name: Verify .root Files
+        run: |
+          echo "Listing all .root files in plots directory:"
+          ls -lh plots/*.root || echo "No .root files found in plots directory"
+
+      - name: Set up ROOT environment with Docker and Merge Files
         uses: addnab/docker-run-action@v3
         with:
           image: rootproject/root:latest
@@ -87,7 +92,7 @@ jobs:
           run: |
             cd /workspace/plots
             # Use hadd to merge all ROOT files in the plots directory
-            hadd merged_histograms.root histogram_*.root
+            hadd /workspace/plots/merged_histograms.root /workspace/plots/histogram_*.root
 
       - name: Commit and Push Merged ROOT File
         if: always()
