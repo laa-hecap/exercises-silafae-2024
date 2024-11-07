@@ -30,6 +30,9 @@ jobs:
           data_file_name=$(basename "${{ github.event.inputs.data_file }}" .csv)
           echo "data_file_name=$data_file_name" >> $GITHUB_OUTPUT
 
+      - name: Debug Data File Name
+        run: echo "Extracted data file name: ${{ steps.extract_name.outputs.data_file_name }}"
+
   process-file:
     needs: setup
     runs-on: ubuntu-latest
@@ -39,6 +42,8 @@ jobs:
       fail-fast: false
       matrix:
         file: ${{ fromJSON(needs.setup.outputs.files) }}
+    outputs:
+      data_file_name: ${{ needs.setup.outputs.data_file_name }}
 
     steps:
       - name: Checkout code
@@ -79,6 +84,8 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
+    outputs:
+      data_file_name: ${{ needs.setup.outputs.data_file_name }}
 
     steps:
       - name: Checkout code
@@ -126,7 +133,7 @@ jobs:
           options: --rm -v ${{ github.workspace }}:/workspace
           run: |
             cd /workspace
-            python3 root-to-png.py "plots/merged_histograms_${{ needs.setup.outputs.data_file_name }}.root"
+            python3 root-to-png.py "plots/merged_histograms_${{ needs.merge-root-files.outputs.data_file_name }}.root"
 
       - name: Commit and Push Merged PNG File
         env:
@@ -134,6 +141,6 @@ jobs:
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
-          git add "plots/merged_histograms_${{ needs.setup.outputs.data_file_name }}.png" || echo "No merged PNG file generated"
+          git add "plots/merged_histograms_${{ needs.merge-root-files.outputs.data_file_name }}.png" || echo "No merged PNG file generated"
           git diff --cached --exit-code || git commit -m "Add merged histogram as PNG" --allow-empty
           git push --force-with-lease origin HEAD:main
