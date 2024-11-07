@@ -53,11 +53,20 @@ jobs:
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
-          git add plots/histogram_*.png plots/histogram_*.root || echo "No plot generated"
-          git diff --cached --exit-code || git commit -m "Add updated histogram plot" --allow-empty
+          
+          # Only add files if they exist
+          if ls plots/histogram_*.png plots/histogram_*.root 1> /dev/null 2>&1; then
+            git add plots/histogram_*.png plots/histogram_*.root
+            git diff --cached --exit-code || git commit -m "Add updated histogram plot" --allow-empty
+          else
+            echo "No plot generated"
+          fi
+
           # Pull the latest changes and rebase before pushing
           git fetch origin main
+          git stash push -m "Stash uncommitted changes for rebase"
           git rebase origin/main
+          git stash pop || true  # Apply stashed changes if any
           git push --force-with-lease origin HEAD:main
 
   merge-root-files:
