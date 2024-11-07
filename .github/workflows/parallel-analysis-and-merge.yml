@@ -110,3 +110,30 @@ jobs:
           git fetch origin main
           git rebase origin/main
           git push --force-with-lease origin HEAD:main || (echo "Rebase failed, retrying..." && git pull --rebase origin main && git push --force-with-lease origin HEAD:main)
+          
+  generate-png:
+    needs: merge-root-files
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Run root-to-png.py in Docker
+        uses: addnab/docker-run-action@v3
+        with:
+          image: rootproject/root:latest
+          options: --rm -v ${{ github.workspace }}:/workspace
+          run: |
+            cd /workspace
+            python3 root-to-png.py "plots/merged_histograms.root"
+
+      - name: Commit and Push Merged PNG File
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add plots/merged_histograms.png || echo "No merged PNG file generated"
+          git diff --cached --exit-code || git commit -m "Add merged histogram as PNG" --allow-empty
+          git push --force-with-lease origin HEAD:main
