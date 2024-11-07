@@ -1,4 +1,4 @@
-name: Process ATLAS ROOT Open Data
+name: Process ATLAS ROOT Open Data v2
 
 on:
   workflow_dispatch:
