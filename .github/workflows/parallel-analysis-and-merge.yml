@@ -115,7 +115,7 @@ jobs:
           git rebase origin/main
           git push --force-with-lease origin HEAD:main || (echo "Rebase failed, retrying..." && git pull --rebase origin main && git push --force-with-lease origin HEAD:main)
           
-  generate-png:
+generate-png:
     needs: merge-root-files
     runs-on: ubuntu-latest
 
@@ -130,7 +130,7 @@ jobs:
           options: --rm -v ${{ github.workspace }}:/workspace
           run: |
             cd /workspace
-            python3 root-to-png.py "plots/merged_histograms_.root"
+            python3 root-to-png.py "plots/merged_histograms_${{ needs.merge-root-files.outputs.data_file_name }}.root"
 
       - name: Commit and Push Merged PNG File
         env:
@@ -138,6 +138,14 @@ jobs:
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
-          git add "plots/merged_histograms_.png" || echo "No merged PNG file generated"
+          git add "plots/merged_histograms_${{ needs.merge-root-files.outputs.data_file_name }}.png" || echo "No merged PNG file generated"
           git diff --cached --exit-code || git commit -m "Add merged histogram as PNG" --allow-empty
-          git push --force-with-lease origin HEAD:main
+          
+          # Fetch latest changes, rebase, and push
+          git fetch origin main
+          git rebase origin/main
+          git push --force-with-lease origin HEAD:main || (
+            echo "Rebase failed, retrying with pull --rebase..." &&
+            git pull --rebase origin main &&
+            git push --force-with-lease origin HEAD:main
+          )
