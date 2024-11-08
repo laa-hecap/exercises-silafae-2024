@@ -115,7 +115,7 @@ jobs:
           git rebase origin/main
           git push --force-with-lease origin HEAD:main || (echo "Rebase failed, retrying..." && git pull --rebase origin main && git push --force-with-lease origin HEAD:main)
           
-generate-png:
+  generate-png:
     needs: merge-root-files
     runs-on: ubuntu-latest
 
