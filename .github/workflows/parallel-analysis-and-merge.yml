@@ -39,6 +39,8 @@ jobs:
       fail-fast: false
       matrix:
         file: ${{ fromJSON(needs.setup.outputs.files) }}
+    outputs:
+      data_file_name: ${{ needs.setup.outputs.data_file_name }}
 
     steps:
       - name: Checkout code
@@ -68,11 +70,12 @@ jobs:
             echo "No plot generated"
           fi
 
+          # Pull the latest changes and handle conflicts automatically if they arise
           git fetch origin main
-          git stash push -m "Stash uncommitted changes for rebase"
-          git rebase origin/main
-          git stash pop || true
-          git push --force-with-lease origin HEAD:main
+          git pull --rebase origin main || git reset --hard origin/main
+          
+          # Push the changes
+          git push --force-with-lease origin HEAD:main || echo "Push failed due to conflict resolution"
 
   merge-root-files:
     needs: process-file
@@ -109,10 +112,12 @@ jobs:
           git config --local user.name "GitHub Action"
           git add "plots/merged_histograms_${{ needs.setup.outputs.data_file_name }}.root" || echo "No merged ROOT file generated"
           git diff --cached --exit-code || git commit -m "Add merged ROOT file" --allow-empty
-          git fetch origin main
-          git rebase origin/main
-          git push --force-with-lease origin HEAD:main || (echo "Rebase failed, retrying..." && git pull --rebase origin main && git push --force-with-lease origin HEAD:main)
           
+          # Pull the latest changes and handle conflicts automatically
+          git fetch origin main
+          git pull --rebase origin main || git reset --hard origin/main
+          git push --force-with-lease origin HEAD:main || echo "Push failed due to conflict resolution"
+
   generate-png:
     needs: merge-root-files
     runs-on: ubuntu-latest
@@ -139,11 +144,7 @@ jobs:
           git add "plots/merged_histograms_${{ needs.merge-root-files.outputs.data_file_name }}.png" || echo "No merged PNG file generated"
           git diff --cached --exit-code || git commit -m "Add merged histogram as PNG" --allow-empty
           
-          # Fetch latest changes, rebase, and push
+          # Pull latest changes, handle conflicts, and push
           git fetch origin main
-          git rebase origin/main
-          git push --force-with-lease origin HEAD:main || (
-            echo "Rebase failed, retrying with pull --rebase..." &&
-            git pull --rebase origin main &&
-            git push --force-with-lease origin HEAD:main
-          )
+          git pull --rebase origin main || git reset --hard origin/main
+          git push --force-with-lease origin HEAD:main || echo "Push failed due to conflict resolution"
