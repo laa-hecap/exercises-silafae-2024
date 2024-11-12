@@ -55,7 +55,7 @@ jobs:
             cd /workspace
             python3 gamma-gamma-analysis-v1.py "${{ matrix.file }}"
 
-      - name: Commit and Push Histogram Plot
+      - name: Commit and Force-Push Histogram Plot
         if: always()
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -70,12 +70,8 @@ jobs:
             echo "No plot generated"
           fi
 
-          # Pull the latest changes and handle conflicts automatically if they arise
-          git fetch origin main
-          git pull --rebase origin main || git reset --hard origin/main
-          
-          # Push the changes
-          git push --force-with-lease origin HEAD:main || echo "Push failed due to conflict resolution"
+          # Force push to the current branch
+          git push --force origin HEAD:${{ github.ref_name }}
 
   merge-root-files:
     needs: process-file
@@ -103,7 +99,7 @@ jobs:
             cd /workspace/plots
             hadd -f "/workspace/plots/merged_histograms_${{ needs.setup.outputs.data_file_name }}.root" /workspace/plots/histogram_*.root
 
-      - name: Commit and Push Merged ROOT File
+      - name: Commit and Force-Push Merged ROOT File
         if: always()
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -113,10 +109,8 @@ jobs:
           git add "plots/merged_histograms_${{ needs.setup.outputs.data_file_name }}.root" || echo "No merged ROOT file generated"
           git diff --cached --exit-code || git commit -m "Add merged ROOT file" --allow-empty
           
-          # Pull the latest changes and handle conflicts automatically
-          git fetch origin main
-          git pull --rebase origin main || git reset --hard origin/main
-          git push --force-with-lease origin HEAD:main || echo "Push failed due to conflict resolution"
+          # Force push to the current branch
+          git push --force origin HEAD:${{ github.ref_name }}
 
   generate-png:
     needs: merge-root-files
@@ -135,7 +129,7 @@ jobs:
             cd /workspace
             python3 root-to-png.py "plots/merged_histograms_${{ needs.merge-root-files.outputs.data_file_name }}.root"
 
-      - name: Commit and Push Merged PNG File
+      - name: Commit and Force-Push Merged PNG File
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
@@ -144,7 +138,5 @@ jobs:
           git add "plots/merged_histograms_${{ needs.merge-root-files.outputs.data_file_name }}.png" || echo "No merged PNG file generated"
           git diff --cached --exit-code || git commit -m "Add merged histogram as PNG" --allow-empty
           
-          # Pull latest changes, handle conflicts, and push
-          git fetch origin main
-          git pull --rebase origin main || git reset --hard origin/main
-          git push --force-with-lease origin HEAD:main || echo "Push failed due to conflict resolution"
+          # Force push to the current branch
+          git push --force origin HEAD:${{ github.ref_name }}
