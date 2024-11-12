@@ -29,8 +29,6 @@ jobs:
         run: |
           data_file_name=$(basename "${{ github.event.inputs.data_file }}" .csv)
           echo "data_file_name=$data_file_name" >> $GITHUB_OUTPUT
-        outputs:
-          data_file_name: ${{ steps.extract_name.outputs.data_file_name }}
 
   process-file:
     needs: setup
@@ -41,8 +39,6 @@ jobs:
       fail-fast: false
       matrix:
         file: ${{ fromJSON(needs.setup.outputs.files) }}
-    outputs:
-      data_file_name: ${{ needs.setup.outputs.data_file_name }}
 
     steps:
       - name: Checkout code
