@@ -55,7 +55,7 @@ jobs:
             cd /workspace
             python3 gamma-gamma-analysis-v1.py "${{ matrix.file }}"
 
-      - name: Commit and Force-Push Histogram Plot
+      - name: Commit and Push Histogram Plot
         if: always()
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -70,8 +70,11 @@ jobs:
             echo "No plot generated"
           fi
 
-          # Force push to the current branch
-          git push --force origin HEAD:${{ github.ref_name }}
+          git fetch origin main
+          git stash push -m "Stash uncommitted changes for rebase"
+          git rebase origin/main
+          git stash pop || true
+          git push --force-with-lease origin HEAD:main
 
   merge-root-files:
     needs: process-file
@@ -99,7 +102,7 @@ jobs:
             cd /workspace/plots
             hadd -f "/workspace/plots/merged_histograms_${{ needs.setup.outputs.data_file_name }}.root" /workspace/plots/histogram_*.root
 
-      - name: Commit and Force-Push Merged ROOT File
+      - name: Commit and Push Merged ROOT File
         if: always()
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -108,10 +111,10 @@ jobs:
           git config --local user.name "GitHub Action"
           git add "plots/merged_histograms_${{ needs.setup.outputs.data_file_name }}.root" || echo "No merged ROOT file generated"
           git diff --cached --exit-code || git commit -m "Add merged ROOT file" --allow-empty
+          git fetch origin main
+          git rebase origin/main
+          git push --force-with-lease origin HEAD:main || (echo "Rebase failed, retrying..." && git pull --rebase origin main && git push --force-with-lease origin HEAD:main)
           
-          # Force push to the current branch
-          git push --force origin HEAD:${{ github.ref_name }}
-
   generate-png:
     needs: merge-root-files
     runs-on: ubuntu-latest
@@ -129,7 +132,7 @@ jobs:
             cd /workspace
             python3 root-to-png.py "plots/merged_histograms_${{ needs.merge-root-files.outputs.data_file_name }}.root"
 
-      - name: Commit and Force-Push Merged PNG File
+      - name: Commit and Push Merged PNG File
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
@@ -138,5 +141,11 @@ jobs:
           git add "plots/merged_histograms_${{ needs.merge-root-files.outputs.data_file_name }}.png" || echo "No merged PNG file generated"
           git diff --cached --exit-code || git commit -m "Add merged histogram as PNG" --allow-empty
           
-          # Force push to the current branch
-          git push --force origin HEAD:${{ github.ref_name }}
+          # Fetch latest changes, rebase, and push
+          git fetch origin main
+          git rebase origin/main
+          git push --force-with-lease origin HEAD:main || (
+            echo "Rebase failed, retrying with pull --rebase..." &&
+            git pull --rebase origin main &&
+            git push --force-with-lease origin HEAD:main
+          )
