@@ -1,6 +1,15 @@
+// For format details, see https://aka.ms/devcontainer.json.
 {
-    "image": "mcr.microsoft.com/devcontainers/universal:2",
-    "features": {
+  "name": "Ollama",
+  "image": "mcr.microsoft.com/devcontainers/python:3.12-bullseye",
+  "features": {
       "ghcr.io/prulloac/devcontainer-features/ollama:1": {}
-    }
+  },
+
+// Use 'postStartCommand' to run commands after the container is started (more frequently than create).
+"postCreateCommand": "for model in mistral ollama3.2 gema:7b; do ollama pull $model; done",
+
+  "hostRequirements": {
+      "memory": "16gb"
+  }
 }
