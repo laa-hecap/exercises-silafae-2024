@@ -8,7 +8,7 @@ headers = {
 }
 
 data = {
-   "model": "mistral",
+   "model": "gemma:7b", # "llama3.2:latest",
    "prompt": "what is the difference between climate and weather?",
    "stream": False
 }
