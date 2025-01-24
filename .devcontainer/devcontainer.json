@@ -7,7 +7,7 @@
   },
 
   // This command installs requests before pulling the models.
-  "postCreateCommand": "pip install requests && for model in mistral ollama3 gema:7b; do ollama pull $model; done",
+  "postCreateCommand": "pip install requests && for model in mistral llama3.2 gemma2:2b deepseek-r1:1.5b; do ollama pull $model; done",
 
   "hostRequirements": {
     "memory": "16gb"
