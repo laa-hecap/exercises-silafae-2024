@@ -3,13 +3,13 @@
   "name": "Ollama",
   "image": "mcr.microsoft.com/devcontainers/python:3.12-bullseye",
   "features": {
-      "ghcr.io/prulloac/devcontainer-features/ollama:1": {}
+    "ghcr.io/prulloac/devcontainer-features/ollama:1": {}
   },
 
-// Use 'postStartCommand' to run commands after the container is started (more frequently than create).
-"postCreateCommand": "for model in mistral ollama3.2 gema:7b; do ollama pull $model; done",
+  // This command installs requests before pulling the models.
+  "postCreateCommand": "pip install requests && for model in mistral ollama3 gema:7b; do ollama pull $model; done",
 
   "hostRequirements": {
-      "memory": "16gb"
+    "memory": "16gb"
   }
 }
