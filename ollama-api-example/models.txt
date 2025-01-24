@@ -1,0 +1,4 @@
+gemma2:2b
+llama3.2
+deepseek-r1:1.5b
+mistral

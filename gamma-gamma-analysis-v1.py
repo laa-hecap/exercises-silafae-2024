@@ -68,10 +68,16 @@ for event in tree:
 
 # Draw and save the histogram
 os.makedirs('plots', exist_ok=True)
-output_filename = f"plots/histogram_{os.path.basename(root_file_url).replace('.root', '.png')}"
+output_png = f"plots/histogram_{os.path.basename(root_file_url).replace('.root', '.png')}"
+output_root = f"plots/histogram_{os.path.basename(root_file_url).replace('.root', '.root')}"
 hist.Draw("E")
 canvas.SetLogy()
-canvas.SaveAs(output_filename)
+canvas.SaveAs(output_png)
+
+# Save histogram in .root format
+root_output_file = ROOT.TFile(output_root, "RECREATE")
+hist.Write()
+root_output_file.Close()
 
 end = time.time()
 duration = end - start
